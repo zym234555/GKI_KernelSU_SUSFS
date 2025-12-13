@@ -6,6 +6,10 @@ permissions:
 on:
   workflow_call: # This allows this workflow to be called from another workflow
     inputs:
+      common_repo_android12:  # 新增可配置参数
+        required: false
+        type: string
+        default: "https://github.com/zym234555/android_gki_kernel_5.10_common.git"    
       make_release:
         required: true
         type: boolean
@@ -202,6 +206,17 @@ jobs:
             curl -LSs https://github.com/zzh20188/GKI_KernelSU_SUSFS/raw/refs/heads/legacy/fix_5.15.legacy -o fix_5.15.legacy.patch
             patch -p1 < fix_5.15.legacy.patch
           fi
+
+      # 新增条件替换 common 目录的步骤
+      - name: Replace common directory (Conditional)
+        run: |
+          cd "$CONFIG"
+            echo "Using custom Android12 common repo: ${{ inputs.common_repo_android12 }}"
+            cd common
+            rm -rf {*,.*} || true
+            git clone --depth=1 "${{ inputs.common_repo_android12 }}" temp_common
+            cp -r temp_common/{*,.*} . || true
+            rm -rf temp_common
 
       - name: 使GKI在一加8E平台正常使用
         if: ${{ inputs.supp_op }}
@@ -549,7 +564,7 @@ jobs:
             sed -i '$s|echo "\$res"|echo "${{ inputs.version }}"|' ./common/scripts/setlocalversion
           else
             echo "版本号为空，使用默认值"
-            sed -i '$s|echo "\$res"|echo "\$res-zakozakoooooo-1145141919"|' ./common/scripts/setlocalversion
+            sed -i '$s|echo "\$res"|echo "\$res-zym234555"|' ./common/scripts/setlocalversion
           fi
 
           # 如果你需要改构建时间,请把以下变量 CURRENT_TIME 修改为如下例子字符串,如:CURRENT_TIME="Sat Jun 07 06:29:29 UTC 2025"
